@@ -1,21 +1,84 @@
-import requests
+import subprocess
 
-DEEPSEEK_API_KEY = "DEEPSEEK_API_KEY"
-DEEPSEEK_API_URL = "https://api.deepseek.com/v1/completions"
+def get_debugging_suggestions(code: str, model_name: str = "qwen2.5-coder:1.5b"):
+    """
+    Generate debugging suggestions using a locally hosted Ollama model.
+
+    Args:
+        code (str): The code snippet to debug.
+        model_name (str): The name of the Ollama model to use (default: qwen2.5-coder:1.5b).
+
+    Returns:
+        str: AI-generated debugging suggestions.
+    """
+    prompt = f"Debug the following code:\n{code}\nProvide actionable suggestions for improvement."
+
+    try:
+        result = subprocess.run(
+            ["ollama", "run", model_name, prompt],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=True,
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"Error running Ollama model: {e.stderr}")
+    except UnicodeDecodeError as e:
+        raise Exception(f"Encoding error: {e}")
 
 
-def get_debugging_suggestions(code: str):
-    headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "model": "deepseek-r1",
-        "prompt": f"Debug the following code:\n{code}",
-        "max_tokens": 100,
-    }
-    response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload)
-    if response.status_code == 200:
-        return response.json().get("choices")[0].get("text").strip()
-    else:
-        raise Exception(f"Error calling DeepSeek API: {response.text}")
+# if __name__ == "__main__":
+#     code = """
+#     class Solution {
+#     public int[] queryResults(int limit, int[][] queries) {
+#         Map<Integer, Integer> map = new HashMap<>();
+        
+#         Map<Integer, Integer> freq = new HashMap<>();
+
+#         int len = queries.length;
+
+#         int ans[] = new int[len];
+
+#         int count = 0;
+
+#         for(int i = 0; i < len; i++)
+#         {
+#             int first = queries[i][0];
+#             int second = queries[i][1];
+
+
+#             if(!map.containsKey(first))
+#             {
+#                 count++;
+#                 map.put(first, second);
+                
+#             }
+
+#             else
+#             {
+#                 int val = map.get(first);
+#                 if(freq.get(val) == 1)
+#                 {
+#                     freq.remove(val);
+#                 }
+#                 else
+#                 {
+#                     freq.put(val, freq.get(val) - 1);
+#                 }
+#                 map.put(first, second);
+#             }
+#             freq.put(second, freq.getOrDefault(second, 0) + 1);
+
+#             ans[i] = freq.size();
+#         }
+
+#         return ans;
+#     }
+# }
+#     """
+#     try:
+#         suggestions = get_debugging_suggestions(code, model_name="qwen2.5-coder:1.5b")
+#         print("AI Suggestions:", suggestions)
+#     except Exception as e:
+#         print("Error:", e)

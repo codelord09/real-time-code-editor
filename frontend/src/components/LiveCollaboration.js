@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import io from "socket.io-client";
 
-const socket = io("http://localhost:8000");
+// Connect to a socket.io server, passing an array of URLs if necessary
+const socket = io("http://localhost:3000"); // Use one URL or an array of URLs if needed
 
 const LiveCollaboration = ({ clientId, onRemoteCodeChange }) => {
   useEffect(() => {
@@ -20,7 +21,7 @@ const LiveCollaboration = ({ clientId, onRemoteCodeChange }) => {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [clientId, onRemoteCodeChange]);
 
   const sendMessage = () => {
     socket.emit("send_message", `Hello from Client #${clientId}`);

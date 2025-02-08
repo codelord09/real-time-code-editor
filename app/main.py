@@ -1,7 +1,6 @@
 from fastapi import FastAPI, WebSocket, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_socketio import SocketManager
 from app.models import Base
 from app.schemas import UserCreate, CodeFileCreate
 from app.crud import create_user, create_code_file
@@ -9,6 +8,7 @@ from app.websocket import ConnectionManager
 from app.ai_debugger import get_debugging_suggestions
 from app.auth import get_current_user
 from app.config import get_db
+from pydantic import BaseModel
 
 
 app = FastAPI()
@@ -16,21 +16,21 @@ app = FastAPI()
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Allow frontend origin
+    allow_origins=[
+        "http://192.168.1.21:3000",
+        "http://localhost:3000",
+    ],  # Allow frontend origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Initialize Socket.IO
-socket_manager = SocketManager(app=app)
 manager = ConnectionManager()
 
 
 @app.get("/")
 def read_root():
     return {"message": "Real-Time Collaborative Code Editor is running!"}
-
 
 
 @app.post("/register/")
@@ -47,28 +47,36 @@ def create_code(
     return create_code_file(db, file, current_user.id)
 
 
+# Define a Pydantic model for the input data
+class CodeRequest(BaseModel):
+    code: str
+
+
 @app.post("/debug/")
-def debug_code(code: str):
-    suggestions = get_debugging_suggestions(code)
-    return {"suggestions": suggestions}
+def debug_code(code: CodeRequest):
+    print(f"Received code: {code.code}")  # Log the incoming code
 
+    """
+    Endpoint to generate AI-powered debugging suggestions.
 
-# Socket.IO Event Handlers
-@app.sio.on("join")
-async def handle_join(sid, *args):
-    print(f"Client {sid} joined")
-    await app.sio.emit("message", f"Welcome Client {sid}")
+    Args:
+        code (dict): JSON payload containing the code snippet.
+                     Example: {"code": "def add(a, b): return a - b"}
 
+    Returns:
+        dict: AI-generated debugging suggestions.
+    """
+    try:
+        code_snippet = (
+            code.code
+        )  # Access the code using the 'code' attribute of CodeRequest model
+        if not code_snippet:
+            raise ValueError("Code snippet is required.")
 
-@app.sio.on("send_message")
-async def handle_send_message(sid, data):
-    print(f"Message from {sid}: {data}")
-    await app.sio.emit("receive_message", data)
-
-
-@app.sio.on("disconnect")
-async def handle_disconnect(sid):
-    print(f"Client {sid} disconnected")
+        suggestions = get_debugging_suggestions(code_snippet)
+        return {"suggestions": suggestions}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.websocket("/ws/{client_id}")
