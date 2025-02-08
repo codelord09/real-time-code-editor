@@ -1,6 +1,6 @@
 # Real-Time Collaborative Code Editor with AI-Assisted Debugging
 
-This repository contains the implementation of a **Real-Time Collaborative Code Editor with AI-Assisted Debugging**, built using FastAPI for the backend and React for the frontend. The platform allows multiple developers to collaborate on code in real-time (like Google Docs for code) and provides AI-powered debugging suggestions.
+This repository contains the implementation of a **Real-Time Collaborative Code Editor with AI-Assisted Debugging**, built using **FastAPI** for the backend and **React** for the frontend. The platform allows multiple developers to collaborate on code in real-time (like Google Docs for code) and provides AI-powered debugging suggestions using **Qwen 2.5 7B** running locally via **Ollama**.
 
 ---
 
@@ -24,13 +24,14 @@ This repository contains the implementation of a **Real-Time Collaborative Code 
 ## Features
 
 ### Core Features
+
 1. **Real-Time Collaboration**:
    - Multiple users can edit the same code file simultaneously.
    - Changes are synced in real-time using WebSockets.
    - Live cursors and highlights for each user.
 
 2. **AI-Assisted Debugging**:
-   - Integrates an AI model (e.g., OpenAI Codex or Hugging Face) to analyze code.
+   - Integrates **Qwen 2.5 7B** (via **Ollama**) to analyze code locally.
    - Provides real-time suggestions for syntax errors, potential bugs, and performance improvements.
    - Users can accept or reject AI suggestions.
 
@@ -55,14 +56,17 @@ This repository contains the implementation of a **Real-Time Collaborative Code 
 ## Requirements
 
 ### Prerequisites
+
 - Python 3.9+
 - Node.js (for the frontend)
 - PostgreSQL (for the database)
 - Redis (for caching and real-time updates)
 - RabbitMQ (optional, for message queuing)
 - Docker (optional, for containerization)
+- **Ollama** installed locally for running **Qwen 2.5 7B**
 
 ### Dependencies
+
 - Backend: FastAPI, SQLAlchemy, Pydantic, Uvicorn, Redis, RabbitMQ, etc.
 - Frontend: React, Socket.IO, CodeMirror, Axios, etc.
 
@@ -78,7 +82,7 @@ real-time-code-editor/
 │   ├── schemas.py           # Pydantic schemas
 │   ├── crud.py              # CRUD operations
 │   ├── websocket.py         # WebSocket implementation
-│   ├── ai_debugger.py       # AI integration
+│   ├── ai_debugger.py       # AI integration (Qwen 2.5 7B via Ollama)
 │   ├── auth.py              # Authentication and authorization
 │   ├── config.py            # Configuration settings
 │   └── utils/               # Utility functions
@@ -117,14 +121,20 @@ real-time-code-editor/
 3. **Set Up Redis**:
    - Start Redis locally or use a hosted instance.
 
-4. **Add API Keys**:
-   - Add your AI API key (e.g., OpenAI or Hugging Face) to the `.env` file:
-     ```env
-     DEEPSEEK_API_KEY=your_api_key
-     SECRET_KEY=your_jwt_secret_key
+4. **Install Ollama and Qwen 2.5 7B**:
+   - Install **Ollama** by following the instructions at [Ollama's official website](https://ollama.ai/).
+   - Pull the **Qwen 2.5 7B** model:
+     ```bash
+     ollama pull qwen2.5:7b
      ```
 
-5. **Run Migrations**:
+5. **Update `.env`**:
+   - Add the following to your `.env` file:
+     ```env
+     OLLAMA_MODEL=qwen2.5:7b
+     ```
+
+6. **Run Migrations**:
    - Use Alembic or SQLAlchemy to create tables in the database.
 
 ### Frontend Setup
@@ -149,19 +159,19 @@ real-time-code-editor/
 ## Running the Application
 
 ### Backend
+
 Start the FastAPI server:
 ```bash
 uvicorn app.main:app --reload
 ```
-
 The backend will run at `http://localhost:8000`.
 
 ### Frontend
+
 Start the React development server:
 ```bash
 npm start
 ```
-
 The frontend will run at `http://localhost:3000`.
 
 ---
@@ -172,7 +182,6 @@ Access the Swagger UI documentation at:
 ```
 http://localhost:8000/docs
 ```
-
 This includes all APIs for user management, code file management, and AI debugging.
 
 ---
@@ -180,12 +189,14 @@ This includes all APIs for user management, code file management, and AI debuggi
 ## Testing
 
 ### Backend Tests
+
 Run unit and integration tests using `pytest`:
 ```bash
 pytest
 ```
 
 ### Frontend Tests
+
 Use tools like Jest or React Testing Library for frontend testing.
 
 ---
@@ -206,10 +217,15 @@ Use tools like Jest or React Testing Library for frontend testing.
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
+
 1. Fork the repository.
 2. Create a new branch (`git checkout -b feature/your-feature`).
 3. Commit your changes (`git commit -m "Add your feature"`).
 4. Push to the branch (`git push origin feature/your-feature`).
 5. Open a pull request.
 
+---
+### Notes on AI Integration
 
+- The AI model (**Qwen 2.5 7B**) is run locally using **Ollama**, ensuring data privacy and eliminating dependency on external APIs.
+- To call the model, the backend uses a subprocess or HTTP requests to interact with the Ollama server.
